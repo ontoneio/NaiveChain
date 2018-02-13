@@ -1,3 +1,9 @@
+'use strict';
+const CryptoJS = require("crypto-js");
+const express = require("express");
+const bodyParser = require('body-parser');
+const WebSocket = require("ws");
+
 //Block Structure
 class Block {
   constructor(index, previousHash, timestamp, data, hash) {
