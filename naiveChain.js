@@ -18,6 +18,14 @@ class Block {
     this.hash = hash.toString();
   };
 };
+
+const sockets = [];
+const MessageType = {
+  QUERY_LATEST: 0,
+  QUERY_ALL: 1,
+  RESPONSE_BLOCKCHAIN: 2
+};
+
 // Block Hash
 const calculateHash = (index, previousHash, timestamp, data, hash) => {
     return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
