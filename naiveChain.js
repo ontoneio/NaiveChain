@@ -32,3 +32,48 @@ const getGenesisBlock = () => {
 };
 const blockchain = [getGenesisBlock()];
 // Validate Integrity of Blocks
+const isValidNewBlock = (newBlock, previousBlock) => {
+    if (previousBlock.index + 1 !== newBlock.index) {
+      console.log('!>>> Invalid index <<<!');
+      return false
+    } else if (previousBlock.hash !== newBlock.previousHash) {
+        console.log('!>>> Invalid previousHash <<<!');
+        return false
+    } else if (calculateHashForBlock(newBlock) !== newBlock.hash) {
+        console.log('!>>> Invalid hash: ' + calculateHash(newBlock) + ' ' + newBlock.hash);
+        return false
+    }
+    return true
+}
+// Choose the longest chain
+const replaceChain = (newBlocks) => {
+    if (isValidChain(newBlocks) && newBlocks.length > blockchain.length) {
+        console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
+        blockchain = newBlocks;
+        broadcast(responseLatestMsg());       
+    } else {
+        console.log('!>>> Received blockchain invalid <<<!');        
+    }
+};
+// Controlling the node
+const initHttpServer = () => {
+    const app = express(); 
+    app.use(bodyParser.json());
+
+    app.get('/blocks', (req, res) => res.send(JSON.stringify(blockchain)));
+    app.post('/mineBlock', (req, res) => {
+        let newBlock = generateNextBlock(req.body.data);
+        addBlock(newBlock);
+        broadcast(responseLatestMsg());
+        console.log('block added: ' + JSON.stringify(newBlock));
+        res.send();
+    });
+    app.get('/peers', (req, res) => {
+        res.send(sockets.map(s => s._socket.remoteAddress + ':' + s._socket.remotePort));
+    });
+    app.post('/addPeer', (req, res) => {
+        connectToPeers([req.body.peer]);
+        res.send();
+    });
+    app.listen(http_port, () => console.log('Listening http on port: ' + http_port));
+};
