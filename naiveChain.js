@@ -4,6 +4,10 @@ const express = require("express");
 const bodyParser = require('body-parser');
 const WebSocket = require("ws");
 
+const http_port = process.env.HTTP_PORT || 3001;
+const p2p_port = process.env.P2P_PORT || 6001;
+const initialPeers = process.env.PEERS ? process.env.PEERS.split(',') : []; 
+
 //Block Structure
 class Block {
   constructor(index, previousHash, timestamp, data, hash) {
