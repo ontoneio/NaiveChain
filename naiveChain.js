@@ -25,6 +25,34 @@ const MessageType = {
   QUERY_ALL: 1,
   RESPONSE_BLOCKCHAIN: 2
 };
+// Storing the blocks
+const getGenesisBlock = () => {
+  return new Block(0, "0", 1465154705, "JAM Genesis block!!", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7");
+};
+const blockchain = [getGenesisBlock()];
+
+// Controlling the node
+const initHttpServer = () => {
+  const app = express(); 
+  app.use(bodyParser.json());
+
+  app.get('/blocks', (req, res) => res.send(JSON.stringify(blockchain)));
+  app.post('/mineBlock', (req, res) => {
+      let newBlock = generateNextBlock(req.body.data);
+      addBlock(newBlock);
+      broadcast(responseLatestMsg());
+      console.log('block added: ' + JSON.stringify(newBlock));
+      res.send();
+  });
+  app.get('/peers', (req, res) => {
+      res.send(sockets.map(s => s._socket.remoteAddress + ':' + s._socket.remotePort));
+  });
+  app.post('/addPeer', (req, res) => {
+      connectToPeers([req.body.peer]);
+      res.send();
+  });
+  app.listen(http_port, () => console.log('Listening http on port: ' + http_port));
+};
 
 // Block Hash
 const calculateHash = (index, previousHash, timestamp, data, hash) => {
@@ -38,11 +66,8 @@ const generateNextBlock = (blockData) => {
     let nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimeStamp, blockData);
     return new Block(nextIndex, previousBlock.hash, nextTimeStamp, blockData, nextHash);
 };
-// Storing the blocks
-const getGenesisBlock = () => {
-    return new Block(0, "0", 1465154705, "JAM Genesis block!!", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7");
-};
-const blockchain = [getGenesisBlock()];
+
+
 // Validate Integrity of Blocks
 const isValidNewBlock = (newBlock, previousBlock) => {
     if (previousBlock.index + 1 !== newBlock.index) {
@@ -67,25 +92,4 @@ const replaceChain = (newBlocks) => {
         console.log('!>>> Received blockchain invalid <<<!');        
     }
 };
-// Controlling the node
-const initHttpServer = () => {
-    const app = express(); 
-    app.use(bodyParser.json());
 
-    app.get('/blocks', (req, res) => res.send(JSON.stringify(blockchain)));
-    app.post('/mineBlock', (req, res) => {
-        let newBlock = generateNextBlock(req.body.data);
-        addBlock(newBlock);
-        broadcast(responseLatestMsg());
-        console.log('block added: ' + JSON.stringify(newBlock));
-        res.send();
-    });
-    app.get('/peers', (req, res) => {
-        res.send(sockets.map(s => s._socket.remoteAddress + ':' + s._socket.remotePort));
-    });
-    app.post('/addPeer', (req, res) => {
-        connectToPeers([req.body.peer]);
-        res.send();
-    });
-    app.listen(http_port, () => console.log('Listening http on port: ' + http_port));
-};
