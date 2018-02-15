@@ -54,6 +54,46 @@ const initHttpServer = () => {
   app.listen(http_port, () => console.log('Listening http on port: ' + http_port));
 };
 
+const initP2PServer = () => {
+    const server = new WebSocket.Server({port: p2p_port});
+    server.on('connection', ws => initConnection(ws));
+    console.log('listening websocket p2p port on: ' + p2p_port);    
+}
+
+const initConnection = (ws) => {
+    sockets.push(ws);
+    initMessageHandler(ws);
+    initErrorHandler(ws);
+    write(ws, queryChainLengthMsg());  
+};
+
+const initMessageHandler = (ws) => {
+    ws.on('message', (data) => {
+      let message = JSON.parse(data);
+      console.log('Received message ' + JSON.stringify(message));
+      switch (message.type) {
+        case MessageType.QUERY_LATEST:
+            write(ws, responseLatestMsg());
+            break;
+        case MessageType.QUERY_ALL:
+            write(ws, responseChainMsg());
+            break;
+        case MessageType.RESPONSE_BLOCKCHAIN:
+            handleBlockchainResponse(message);
+            break;
+      }
+    });
+};
+
+const initErrorHandler = (ws) => {
+    const closeConnection = (ws) => {
+      console.log('connection failed to peer: ' + ws.url);
+      sockets.splice(sockets.indexOf(ws), 1);
+    };
+    ws.on('close', () => closeConnection(ws));
+    ws.on('error', () => closeConnection(ws));
+};
+
 // Block Hash
 const calculateHash = (index, previousHash, timestamp, data, hash) => {
     return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
