@@ -102,10 +102,14 @@ const generateNextBlock = (blockData) => {
   return new Block(nextIndex, previousBlock.hash, nextTimeStamp, blockData, nextHash);
 };
 
+const calculateHashForBlock = (block) => {
+    return calculateHash(block.index, block.previousHash, block.timestamp, block.data)
+}
 // Block Hash
 const calculateHash = (index, previousHash, timestamp, data, hash) => {
     return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
 };
+
 
 // Validate Integrity of Blocks
 const isValidNewBlock = (newBlock, previousBlock) => {
