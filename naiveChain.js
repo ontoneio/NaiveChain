@@ -110,6 +110,11 @@ const calculateHash = (index, previousHash, timestamp, data, hash) => {
     return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
 };
 
+const addBlock = (newBlock) => {
+    if (isValidNewBlock(newBlock, getLatestBlock())) {
+      blockchain.push(newBlock);
+    }
+};
 
 // Validate Integrity of Blocks
 const isValidNewBlock = (newBlock, previousBlock) => {
