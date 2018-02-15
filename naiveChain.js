@@ -92,21 +92,20 @@ const initErrorHandler = (ws) => {
     };
     ws.on('close', () => closeConnection(ws));
     ws.on('error', () => closeConnection(ws));
+};  
+// Generate Block
+const generateNextBlock = (blockData) => {
+  let previousBlock = getLatestBlock();
+  let nextIndex = previousBlock.index + 1;
+  let nextTimeStamp = new Date().getTime() / 1000;
+  let nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimeStamp, blockData);
+  return new Block(nextIndex, previousBlock.hash, nextTimeStamp, blockData, nextHash);
 };
 
 // Block Hash
 const calculateHash = (index, previousHash, timestamp, data, hash) => {
     return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
 };
-// Generate Block
-const generateNextBlock = (blockData) => {
-    let previousBlock = getLatestBlock();
-    let nextIndex = previousBlock.index + 1;
-    let nextTimeStamp = new Date().getTime() / 1000;
-    let nextHash = calculateHash(nextIndex, previousBlock.hash, nextTimeStamp, blockData);
-    return new Block(nextIndex, previousBlock.hash, nextTimeStamp, blockData, nextHash);
-};
-
 
 // Validate Integrity of Blocks
 const isValidNewBlock = (newBlock, previousBlock) => {
